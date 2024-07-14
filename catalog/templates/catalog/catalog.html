@@ -1,0 +1,72 @@
+{% extends "catalog/base.html" %}
+
+{% block title %}Catalog - Tile Lane B2B{% endblock %}
+
+{% block content %}
+    <h2>Welcome to Tile Lane B2B Catalog!</h2>
+    <form method="get" action="{% url 'catalog' %}">
+        <input type="text" name="search" placeholder="Search product name..." value="{{ search_query }}">
+        <button type="submit">Search</button>
+    </form>
+
+    <div id="productsContainer">
+        {% for product in products %}
+            <div id="productCard">
+                {% for image in product.images %}
+                    {% if forloop.first %}
+                        <img src="{{ image }}" alt="{{ product.title }}" style="width: 150px; height: 150px;">
+                    {% endif %}
+                {% endfor %}
+                <p>{{ product.title }}</p>
+                <span style="{% if product.special_price %}text-decoration: line-through;{% endif %}">${{ product.original_price }} (${{ product.original_price_per_measurement }}/{{ product.measurement_unit | lower }})</span> 
+                {% if product.special_price %}
+                    <strong style="margin-top: 5px;">
+                        Your special price:
+                    </strong>
+                    <span style="color: red;">${{ product.special_price }} 
+                        (${{ product.special_price_per_measurement}}/{{ product.measurement_unit | lower }}) 
+                        {% if product.discount_factor %}
+                            ({{ product.discount_factor }}% off)
+                        {% endif %}
+                    </span>
+                    
+                {% endif %}
+                <div style="margin-top: auto;">
+                    <button style="margin-top: 20px;" onclick="checkStock({{ product.id }})">Check Stock</button>
+                    <div id="stock-level-{{ product.id }}"></div>
+                    <form id="order-form-{{ product.id }}" action="{% url 'order' product.id %}" method="post" style="display: none;">
+                        {% csrf_token %}
+                        <input type="hidden" name="product_title" value="{{ product.title }}">
+                        <input type="number" name="quantity" required />
+                        <button type="submit">Submit</button>
+                    </form>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+
+    <div>
+        {% if prev_page_info %}
+            <a href="?before={{ prev_page_info }}{% if search_query %}&search={{ search_query }}{% endif %}">Previous Page</a>
+        {% endif %}
+        {% if next_page_info %}
+            <a href="?after={{ next_page_info }}{% if search_query %}&search={{ search_query }}{% endif %}">Next Page</a>
+        {% endif %}
+    </div>
+{% endblock %}
+
+{% block scripts %}
+    <script>
+        function checkStock(productId) {
+            var form = document.getElementById(`order-form-${productId}`)
+
+            form.style.display = 'block'
+            fetch(`/check-stock/${productId}/`)
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById(`stock-level-${productId}`).innerText = `Stock level: ${data.stock} ${data.unit}`;
+                })
+                .catch(error => console.error('Error:', error));
+        }
+    </script>
+{% endblock %}

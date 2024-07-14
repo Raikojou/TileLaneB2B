@@ -1,0 +1,24 @@
+# Virtual environment
+venv/
+
+# Python-specific
+*.pyc
+__pycache__/
+*.pyo
+*.pyd
+*.swp
+*.swo
+*.swn
+*.bak
+
+# Django-specific
+*.log
+*.pot
+*.pyc
+__pycache__/
+
+# Environment variables
+.env
+
+# IDE-specific
+.vscode/
